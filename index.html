@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Focus Timer</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #0b1020;
+      color: #eaf6ff;
+      font-family: "Inter", "Pretendard", sans-serif;
+    }
+
+    .timer-card {
+      width: 320px;
+      padding: 36px 28px;
+      border-radius: 28px;
+      background: rgba(15, 23, 42, 0.85);
+      box-shadow: 0 0 40px rgba(0, 180, 255, 0.18);
+      text-align: center;
+      border: 1px solid rgba(0, 180, 255, 0.25);
+    }
+
+    .mode {
+      font-size: 14px;
+      letter-spacing: 0.16em;
+      color: #38bdf8;
+      margin-bottom: 20px;
+    }
+
+    .time {
+      font-size: 64px;
+      font-weight: 700;
+      margin-bottom: 28px;
+      text-shadow: 0 0 18px rgba(56, 189, 248, 0.45);
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 14px 28px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #06111f;
+      background: #38bdf8;
+      cursor: pointer;
+      box-shadow: 0 0 22px rgba(56, 189, 248, 0.45);
+      transition: 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      background: #7dd3fc;
+    }
+
+    .sub {
+      margin-top: 22px;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="timer-card">
+    <div class="mode" id="mode">FOCUS</div>
+    <div class="time" id="time">40:00</div>
+    <button id="toggle">시작</button>
+    <div class="sub">40분 집중 · 10분 휴식 반복</div>
+  </div>
+
+  <script>
+    const FOCUS_TIME = 40 * 60;
+    const BREAK_TIME = 10 * 60;
+
+    let isFocus = true;
+    let timeLeft = FOCUS_TIME;
+    let timer = null;
+    let running = false;
+
+    const timeEl = document.getElementById("time");
+    const modeEl = document.getElementById("mode");
+    const toggleBtn = document.getElementById("toggle");
+
+    function updateDisplay() {
+      const min = String(Math.floor(timeLeft / 60)).padStart(2, "0");
+      const sec = String(timeLeft % 60).padStart(2, "0");
+      timeEl.textContent = `${min}:${sec}`;
+      modeEl.textContent = isFocus ? "FOCUS" : "BREAK";
+    }
+
+    function playAlert() {
+      const audioCtx = new AudioContext();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.frequency.value = 880;
+      gain.gain.value = 0.12;
+
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.35);
+    }
+
+    function switchMode() {
+      playAlert();
+      isFocus = !isFocus;
+      timeLeft = isFocus ? FOCUS_TIME : BREAK_TIME;
+      updateDisplay();
+    }
+
+    function startTimer() {
+      timer = setInterval(() => {
+        timeLeft--;
+
+        if (timeLeft <= 0) {
+          switchMode();
+        }
+
+        updateDisplay();
+      }, 1000);
+    }
+
+    toggleBtn.addEventListener("click", () => {
+      running = !running;
+
+      if (running) {
+        startTimer();
+        toggleBtn.textContent = "일시정지";
+      } else {
+        clearInterval(timer);
+        toggleBtn.textContent = "시작";
+      }
+    });
+
+    updateDisplay();
+  </script>
+</body>
+</html>
